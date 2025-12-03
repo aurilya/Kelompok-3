@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Early Gallery - Fashion</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root{
+    --bg1: #ffd8e8;
+    --bg2: #ffeef5;
+    --card: #ffffffdd;
+    --primary: #ff76b1;
+    --primary-2:#ff4f9a;
+    --text: #2b2b2b;
+    --muted: #7a7a7a;
+    --report-th: #ffb3d6;
+    --report-td: #ffe6f1;
+  }
+  [data-theme="dark"]{
+    --bg1:#1b1220;
+    --bg2:#24162a;
+    --card:#18121a;
+    --primary:#a04b7a;
+    --primary-2:#8b3f68;
+    --text:#eae7ec;
+    --muted:#c3b7c6;
+    --report-th:#3b2140;
+    --report-td:#281726;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family: Poppins, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: linear-gradient(180deg,var(--bg1),var(--bg2));
+    color:var(--text);
+    min-height:100vh;
+    overflow:hidden;
+  }
+
+  /* Header / floating controls */
+  .topbar{
+    position:fixed;
+    right:18px;
+    top:12px;
+    display:flex;
+    gap:10px;
+    z-index:60;
+    align-items:center;
+  }
+  .theme-toggle{
+    background:var(--card);
+    border-radius:12px;
+    padding:8px 10px;
+    box-shadow:0 6px 18px rgba(0,0,0,0.12);
+    cursor:pointer;
+  }
+  .cart-btn{
+    background:linear-gradient(90deg,var(--primary),var(--primary-2));
+    color:#fff;
+    padding:8px 12px;
+    border-radius:12px;
+    cursor:pointer;
+    display:flex;
+    gap:8px;
+    align-items:center;
+    box-shadow:0 6px 18px rgba(0,0,0,0.12);
+  }
+  .cart-count{
+    background:#fff1;
+    padding:2px 8px;
+    border-radius:10px;
+    font-size:13px;
+  }
+
+  /* slide system */
+  .slide{
+    width:100%;
+    height:100vh;
+    position:absolute;
+    top:0;
+    left:100%;
+    padding:64px 20px 40px;
+    transition:all .45s cubic-bezier(.2,.9,.3,1);
+    opacity:0;
+    overflow:auto;
+  }
+  .slide.active{ left:0; opacity:1; }
+
+  h1{ text-align:center; color:var(--primary); margin:8px 0 18px; }
+
+  .box{
+    background:var(--card);
+    width:420px;
+    max-width:92%;
+    margin:10px auto;
+    padding:20px;
+    border-radius:14px;
+    box-shadow:0 8px 30px rgba(0,0,0,0.12);
+  }
+  input, select, textarea{
+    width:100%; padding:10px; margin:8px 0; border-radius:10px; border:1px solid #f4b8d1; background: #fff;
+  }
+  [data-theme="dark"] input,[data-theme="dark"] textarea,[data-theme="dark"] select{
+    background:#111;
+    border:1px solid rgba(255,255,255,0.06);
+    color:var(--text);
+  }
+
+  button.primary{
+    width:220px;
+    padding:10px 12px;
+    border:none; color:#fff; background:linear-gradient(90deg,var(--primary),var(--primary-2));
+    border-radius:10px; cursor:pointer; margin:12px auto; display:block;
+  }
+  button.ghost{ background:transparent; border:1px solid rgba(0,0,0,0.06); padding:8px 12px; border-radius:8px; cursor:pointer; }
+
+  /* Produk grid */
+  .produk-grid{
+    display:flex; gap:22px; justify-content:center; flex-wrap:wrap; padding:20px;
+  }
+  .produk-card{
+    width:220px; background:var(--card); border-radius:14px; box-shadow:0 8px 26px rgba(0,0,0,0.08);
+    overflow:hidden; text-align:center; padding-bottom:12px;
+  }
+  .produk-card img{ width:100%; height:240px; object-fit:cover; display:block; }
+  .produk-card h3{ margin:12px 10px 6px; font-size:16px; }
+  .produk-card p{ margin:0 10px 8px; color:var(--muted); }
+
+  .produk-actions{ display:flex; gap:8px; justify-content:center; padding:8px 12px; }
+
+  /* Cart panel */
+  .cart-panel{
+    position:fixed; right:18px; top:64px; width:360px; max-width:92%; background:var(--card); border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,0.25);
+    padding:14px; z-index:80; transform:translateY(-10px); display:none;
+  }
+  .cart-panel.show{ display:block; animation:fadeIn .25s ease both; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(-8px)} to{opacity:1; transform:none} }
+
+  .cart-item{ display:flex; gap:10px; padding:8px 6px; align-items:center; border-bottom:1px dashed rgba(0,0,0,0.05); }
+  .cart-item img{ width:64px; height:64px; object-fit:cover; border-radius:8px; }
+  .qty-controls{ display:flex; gap:6px; align-items:center; }
+  .qty-controls button{ padding:6px 8px; border-radius:8px; background:transparent; cursor:pointer; border:1px solid rgba(0,0,0,0.06); }
+
+  .cart-summary{ padding:10px 4px; text-align:right; font-weight:600; }
+
+  /* laporan table */
+  .table-box{
+    width:92%; margin:18px auto; background:var(--card); border-radius:12px; padding:12px; box-shadow:0 10px 30px rgba(0,0,0,0.12);
+  }
+  table{ width:100%; border-collapse:collapse; font-size:14px; }
+  th{ text-align:left; padding:10px; background:var(--report-th); border-radius:6px; }
+  td{ padding:10px; background:var(--report-td); border-bottom:6px solid transparent; }
+
+  /* success page */
+  .success{
+    display:flex; gap:14px; align-items:center; justify-content:center; flex-direction:column; padding-top:40px;
+  }
+
+  /* modal (sweetalert-like) */
+  .swal-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:120; display:none; }
+  .swal{ width:340px; max-width:92%; background:var(--card); border-radius:12px; padding:18px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.25); }
+  .swal h2{ margin:8px 0; color:var(--primary); }
+  .swal p{ margin:6px 0 16px; color:var(--muted); }
+  .swal button{ padding:8px 12px; border-radius:10px; border:none; cursor:pointer; }
+
+  /* small */
+  @media (max-width:600px){
+    .produk-card{ width:46%; }
+    .cart-panel{ right:8px; left:8px; top:auto; bottom:12px; transform:none; max-height:60vh; overflow:auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- top controls -->
+<div class="topbar">
+  <div class="theme-toggle" id="themeToggle" title="Toggle theme">
+    <i class="fa-solid fa-moon" id="themeIcon"></i>
+  </div>
+
+  <div class="cart-btn" id="openCartBtn" title="Lihat Keranjang">
+    <i class="fa-solid fa-shopping-cart"></i>
+    <span class="cart-count" id="cartCount">0</span>
+  </div>
+</div>
+
+<!-- SweetAlert-like overlay -->
+<div class="swal-overlay" id="swalOverlay">
+  <div class="swal" id="swalBox">
+    <i class="fa-solid fa-circle-check" style="font-size:42px;color:var(--primary)"></i>
+    <h2 id="swalTitle">Berhasil!</h2>
+    <p id="swalText">Pesananmu berhasil diproses.</p>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button class="primary" id="swalOk">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cart panel -->
+<div class="cart-panel" id="cartPanel" aria-hidden="true">
+  <h3>Keranjang Saya</h3>
+  <div id="cartItems"></div>
+  <div class="cart-summary">
+    Total: <span id="cartTotal">Rp 0</span>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:center;margin-top:8px">
+    <button class="ghost" id="clearCartBtn">Kosongkan</button>
+    <button class="primary" id="toCheckoutBtn">Checkout</button>
+  </div>
+</div>
+
+<!-- Slide 1: Home -->
+<div class="slide active" id="slide1">
+  <div style="text-align:center">
+    <div style="font-size:44px;color:var(--primary)"><i class="fa-solid fa-shop"></i></div>
+    <h1>Early Gallery - Fashion Wanita</h1>
+    <div class="box">
+      <button class="primary" onclick="goto(2)">Admin</button>
+      <button class="primary" onclick="goto(5)">Pembeli</button>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 2: Admin login -->
+<div class="slide" id="slide2">
+  <div class="icon-title" style="text-align:center"><i class="fa-solid fa-user-shield" style="font-size:40px;color:var(--primary)"></i></div>
+  <h1>Login Admin</h1>
+  <div class="box">
+    <input id="adminUser" placeholder="Username Admin">
+    <input id="adminPass" placeholder="Password" type="password">
+    <button class="primary" onclick="goto(3)">Masuk</button>
+  </div>
+</div>
+
+<!-- Slide 3: Admin Dashboard -->
+<div class="slide" id="slide3">
+  <div style="text-align:center">
+    <h1>Dashboard Admin</h1>
+    <div style="display:flex;gap:12px;flex-direction:column;align-items:center">
+      <button class="primary" onclick="goto(4)"><i class="fa-solid fa-shirt"></i> Kelola Pakaian</button>
+      <button class="primary" onclick="goto(7)"><i class="fa-solid fa-file-lines"></i> Laporan Transaksi</button>
+      <button class="ghost" onclick="goto(1)"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 4: Kelola Pakaian -->
+<div class="slide" id="slide4">
+  <h1>Kelola Pakaian</h1>
+  <div class="box">
+    <input id="p_name" placeholder="Nama Pakaian">
+    <input id="p_price" placeholder="Harga (angka)" type="number">
+    <select id="p_size"><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option></select>
+    <input id="p_color" placeholder="Warna">
+    <input id="p_img" placeholder="URL atau nama file gambar (contoh: /mnt/data/cardingan.jpg)">
+    <button class="primary" onclick="addProduct()">Simpan</button>
+  </div>
+  <div style="text-align:center"><button class="ghost" onclick="goto(3)">Kembali</button></div>
+</div>
+
+<!-- Slide 5: Katalog -->
+<div class="slide" id="slide5">
+  <h1>Katalog Pakaian Wanita</h1>
+  <div class="produk-grid" id="produkGrid">
+    <!-- Produk akan dirender oleh JS -->
+  </div>
+  <div style="text-align:center"><button class="ghost" onclick="goto(1)">Kembali</button></div>
+</div>
+
+<!-- Slide 6: Pembelian (form) -->
+<div class="slide" id="slide6">
+  <h1>Pembelian</h1>
+  <div class="box">
+    <input id="buyProductName" readonly placeholder="Produk">
+    <input id="buyProductPrice" readonly placeholder="Harga">
+    <select id="buySize"><option>S</option><option>M</option><option>L</option><option>XL</option></select>
+    <input id="buyColor" placeholder="Warna Pilihan">
+    <input id="buyQty" type="number" min="1" value="1" />
+    <input id="buyerName" placeholder="Nama Pembeli">
+    <textarea id="buyerAddress" placeholder="Alamat Lengkap"></textarea>
+    <button class="primary" id="completeBuyBtn">Selesaikan Pembelian</button>
+  </div>
+  <div style="text-align:center">
+    <button class="ghost" onclick="goto(5)">Kembali</button>
+  </div>
+</div>
+
+<!-- Slide 7: Laporan Transaksi -->
+<div class="slide" id="slide7">
+  <h1>Laporan Transaksi</h1>
+  <div class="table-box">
+    <table id="reportTable">
+      <thead>
+        <tr><th>No</th><th>Nama Pembeli</th><th>Pakaian</th><th>Ukuran</th><th>Harga</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <!-- rows will be added here -->
+      </tbody>
+    </table>
+  </div>
+  <div style="text-align:center"><button class="ghost" onclick="goto(3)">Kembali</button></div>
+</div>
+
+<!-- Slide 8: Pembelian Berhasil -->
+<div class="slide" id="slide8">
+  <h1>Pembelian Berhasil</h1>
+  <div class="success">
+    <i class="fa-solid fa-circle-check" style="font-size:72px;color:var(--primary)"></i>
+    <h2>Terima kasih! Pesananmu berhasil.</h2>
+    <p style="max-width:520px;text-align:center;color:var(--muted)">Silakan tunggu konfirmasi pengiriman. Cek Laporan di dashboard admin untuk detail transaksi.</p>
+    <div>
+      <button class="primary" onclick="goto(5)">Kembali ke Katalog</button>
+      <button class="ghost" onclick="goto(3)">Ke Dashboard</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ========== Data awal produk (pakai path file yang diupload) ========== */
+let products = [
+  {id:1,name:"Cardigan Motif Pastel", price:135000, size:"M", color:"Pastel", img:"/mnt/data/cardingan.jpg"},
+  {id:2,name:"Dress Floral Pink", price:149000, size:"M", color:"Floral", img:"/mnt/data/floral dress.jpg"},
+  {id:3,name:"Blouse Lace Hitam", price:120000, size:"M", color:"Hitam", img:"/mnt/data/soft lace.jpg"}
+];
+
+/* Keranjang: array of {id, qty, productId, size, color} */
+let cart = [];
+
+/* Laporan transaksi (simple array) */
+let reports = [];
+
+/* ====== RENDERING PRODUK KE HALAMAN KATALOG ====== */
+function formatRp(n){
+  return "Rp "+n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,".");
+}
+
+function renderProducts(){
+  const grid = document.getElementById("produkGrid");
+  grid.innerHTML = "";
+  products.forEach(p=>{
+    const card = document.createElement("div"); card.className="produk-card";
+    card.innerHTML = `
+      <img src="${p.img}" alt="${p.name}" onerror="this.style.opacity=.6">
+      <h3>${p.name}</h3>
+      <p>${formatRp(p.price)}</p>
+      <div class="produk-actions">
+        <button class="ghost" onclick="openBuy(${p.id})"><i class="fa-solid fa-bag-shopping"></i> Beli</button>
+        <button class="primary" onclick="addToCart(${p.id})"><i class="fa-solid fa-cart-plus"></i> Tambah ke Keranjang</button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+/* ====== NAVIGATION SLIDES ====== */
+function goto(n){
+  document.querySelectorAll(".slide").forEach(s=>s.classList.remove("active"));
+  const el = document.getElementById("slide"+n);
+  if(el) el.classList.add("active");
+  // close cart panel when navigating
+  hideCart();
+}
+
+/* For convenience numbers map to ids: slide1..slide8 */
+function openBuy(productId){
+  const p = products.find(x=>x.id===productId);
+  if(!p) return;
+  document.getElementById("buyProductName").value = p.name;
+  document.getElementById("buyProductPrice").value = p.price;
+  document.getElementById("buyQty").value = 1;
+  document.getElementById("buySize").value = p.size || "M";
+  document.getElementById("buyColor").value = p.color || "";
+  goto(6);
+}
+
+/* ====== KERANJANG FUNGSIONALITAS ====== */
+function updateCartUI(){
+  const panel = document.getElementById("cartPanel");
+  const container = document.getElementById("cartItems");
+  const countEl = document.getElementById("cartCount");
+  const totalEl = document.getElementById("cartTotal");
+
+  container.innerHTML = "";
+  let total = 0;
+  let qtySum = 0;
+
+  cart.forEach((item, idx)=>{
+    const prod = products.find(p=>p.id===item.productId);
+    if(!prod) return;
+    const line = document.createElement("div"); line.className="cart-item";
+    const lineHTML = `
+      <img src="${prod.img}" alt="${prod.name}" onerror="this.style.opacity=.6">
+      <div style="flex:1">
+        <div style="font-weight:600">${prod.name}</div>
+        <div style="font-size:13px;color:var(--muted)">${item.size} • ${formatRp(prod.price)}</div>
+        <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+          <div class="qty-controls">
+            <button onclick="changeQty(${idx}, -1)">-</button>
+            <div style="padding:6px 10px;border-radius:6px;background:rgba(0,0,0,0.04)">${item.qty}</div>
+            <button onclick="changeQty(${idx}, 1)">+</button>
+          </div>
+          <button style="background:transparent;border:none;color:var(--muted);cursor:pointer" onclick="removeCart(${idx})"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      </div>
+    `;
+    line.innerHTML = lineHTML;
+    container.appendChild(line);
+    total += prod.price * item.qty;
+    qtySum += item.qty;
+  });
+
+  countEl.textContent = qtySum;
+  totalEl.textContent = formatRp(total);
+  // if empty show message
+  if(cart.length===0){
+    container.innerHTML = "<div style='padding:12px;color:var(--muted);text-align:center'>Keranjang kosong</div>";
+  }
+}
+
+function addToCart(productId){
+  // default size M
+  const existing = cart.find(i=>i.productId===productId);
+  if(existing){
+    existing.qty += 1;
+  } else {
+    cart.push({ productId, qty:1, size:"M", color:"" });
+  }
+  updateCartUI();
+  showCart();
+  // small temporary notification (swipe) using swal
+  showSwal("Berhasil", "Produk ditambahkan ke keranjang", "auto");
+}
+
+function changeQty(index, delta){
+  if(!cart[index]) return;
+  cart[index].qty += delta;
+  if(cart[index].qty < 1) cart[index].qty = 1;
+  updateCartUI();
+}
+
+function removeCart(index){
+  cart.splice(index,1);
+  updateCartUI();
+}
+
+function clearCart(){
+  cart = [];
+  updateCartUI();
+}
+
+document.getElementById("openCartBtn").addEventListener("click", ()=>{
+  const panel = document.getElementById("cartPanel");
+  if(panel.classList.contains("show")) hideCart(); else showCart();
+});
+
+function showCart(){
+  const panel = document.getElementById("cartPanel");
+  panel.classList.add("show");
+  panel.setAttribute("aria-hidden","false");
+  updateCartUI();
+}
+function hideCart(){
+  const panel = document.getElementById("cartPanel");
+  panel.classList.remove("show");
+  panel.setAttribute("aria-hidden","true");
+}
+
+/* cart buttons */
+document.getElementById("clearCartBtn").addEventListener("click", ()=>{
+  if(confirm("Kosongkan keranjang?")) { clearCart(); }
+});
+document.getElementById("toCheckoutBtn").addEventListener("click", ()=>{
+  // prefill first item if any
+  if(cart.length===0){
+    showSwal("Keranjang Kosong","Tidak ada produk di keranjang","auto");
+    return;
+  }
+  // open form pembelian di slide6 and prefill with first cart item
+  const item = cart[0];
+  const prod = products.find(p=>p.id===item.productId);
+  document.getElementById("buyProductName").value = prod.name;
+  document.getElementById("buyProductPrice").value = prod.price;
+  document.getElementById("buyQty").value = item.qty;
+  document.getElementById("buySize").value = item.size || prod.size || "M";
+  document.getElementById("buyColor").value = item.color || prod.color || "";
+  goto(6);
+  hideCart();
+});
+
+/* ====== CHECKOUT / PEMBELIAN ====== */
+document.getElementById("completeBuyBtn").addEventListener("click", ()=>{
+  // Collect data
+  const prodName = document.getElementById("buyProductName").value;
+  const price = parseFloat(document.getElementById("buyProductPrice").value) || 0;
+  const size = document.getElementById("buySize").value;
+  const color = document.getElementById("buyColor").value;
+  const qty = Math.max(1, parseInt(document.getElementById("buyQty").value) || 1);
+  const buyer = document.getElementById("buyerName").value.trim();
+  const address = document.getElementById("buyerAddress").value.trim();
+
+  if(!buyer || !address){
+    showSwal("Gagal","Isi nama dan alamat lengkap sebelum menyelesaikan pembelian","ok");
+    return;
+  }
+
+  // Simpan ke laporan (simple)
+  const totalPrice = price * qty;
+  reports.push({ buyer, product: prodName, size, price: totalPrice, status:"Proses" });
+  renderReports();
+
+  // Jika produk ada di keranjang, hapusnya (we'll remove matching product)
+  cart = cart.filter(c=> {
+    const prod = products.find(p=>p.id===c.productId);
+    return !(prod && prod.name===prodName);
+  });
+  updateCartUI();
+
+  // Tampilkan notifikasi swal, lalu arahkan ke halaman sukses
+  showSwal("Pembelian Berhasil","Pesananmu telah diterima. Terima kasih!", "ok", ()=>{
+    // clear form
+    document.getElementById("buyProductName").value="";
+    document.getElementById("buyProductPrice").value="";
+    document.getElementById("buyQty").value=1;
+    document.getElementById("buyerName").value="";
+    document.getElementById("buyerAddress").value="";
+    goto(8); // halaman Pembelian Berhasil
+  });
+});
+
+/* ====== LAPORAN RENDER ====== */
+function renderReports(){
+  const tbody = document.querySelector("#reportTable tbody");
+  tbody.innerHTML = "";
+  reports.forEach((r, idx)=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${idx+1}</td><td>${r.buyer}</td><td>${r.product}</td><td>${r.size}</td><td>${formatRp(r.price)}</td><td>${r.status}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ====== Tambah produk lewat admin ====== */
+function addProduct(){
+  const name = document.getElementById("p_name").value.trim();
+  const price = parseFloat(document.getElementById("p_price").value) || 0;
+  const size = document.getElementById("p_size").value;
+  const color = document.getElementById("p_color").value.trim();
+  const img = document.getElementById("p_img").value.trim();
+  if(!name || !img || price<=0){ alert("Isi nama, gambar, dan harga yang valid"); return; }
+  const id = products.length? Math.max(...products.map(p=>p.id))+1 : 1;
+  products.push({id,name,price,size,color,img});
+  renderProducts();
+  document.getElementById("p_name").value=""; document.getElementById("p_price").value="";
+  document.getElementById("p_img").value=""; document.getElementById("p_color").value="";
+  showSwal("Berhasil","Produk tersimpan", "auto");
+}
+
+/* ====== Simple swal implementation ====== */
+function showSwal(title, text, mode="auto", cb){
+  const overlay = document.getElementById("swalOverlay");
+  document.getElementById("swalTitle").textContent = title;
+  document.getElementById("swalText").textContent = text;
+  overlay.style.display = "flex";
+  // if mode auto: close after 2.2s
+  const okBtn = document.getElementById("swalOk");
+  function closeAll(){
+    overlay.style.display = "none";
+    okBtn.onclick = null;
+    if(typeof cb === "function") cb();
+  }
+  if(mode==="auto"){
+    okBtn.style.display="none";
+    setTimeout(closeAll,2200);
+  } else {
+    okBtn.style.display="inline-block";
+    okBtn.onclick = closeAll;
+    // if mode "ok" we require click; if "auto" auto close above
+  }
+}
+
+/* hide swal on overlay click */
+document.getElementById("swalOverlay").addEventListener("click", (e)=>{
+  if(e.target.id === "swalOverlay"){
+    document.getElementById("swalOverlay").style.display="none";
+  }
+});
+
+/* ====== Theme toggle logic (dark/light) ====== */
+const themeToggle = document.getElementById("themeToggle");
+const themeIcon = document.getElementById("themeIcon");
+function setTheme(t){
+  if(t==="dark"){ document.documentElement.setAttribute("data-theme","dark"); themeIcon.className="fa-solid fa-sun"; }
+  else { document.documentElement.removeAttribute("data-theme"); themeIcon.className="fa-solid fa-moon"; }
+  // store in session (not persistent across full reload)
+  sessionStorage.setItem("eg_theme", t);
+}
+themeToggle.addEventListener("click", ()=>{
+  const current = sessionStorage.getItem("eg_theme") || "light";
+  setTheme(current==="light" ? "dark" : "light");
+});
+window.addEventListener("load", ()=>{
+  const t = sessionStorage.getItem("eg_theme") || "light";
+  setTheme(t);
+  renderProducts();
+  renderReports();
+  updateCartUI();
+});
+
+/* helper to format price used elsewhere */
+</script>
+</body>
+</html>
