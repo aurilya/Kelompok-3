@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Kelola Produk</title>
+  <link rel="stylesheet" href="style-admin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+
+<h1>Kelola Produk</h1>
+
+<div class="box">
+
+  <input id="p_name" placeholder="Nama Produk">
+  <input id="p_price" type="number" placeholder="Harga">
+  <select id="p_size">
+    <option>S</option>
+    <option>M</option>
+    <option>L</option>
+    <option>XL</option>
+  </select>
+  <input id="p_color" placeholder="Warna">
+  <input id="p_img" placeholder="URL Gambar">
+
+  <button class="primary" onclick="addProduct()">Simpan Produk</button>
+
+  <a href="admin-dashboard.html">
+    <button class="ghost">Kembali</button>
+  </a>
+
+</div>
+
+<script src="script-admin.js"></script>
+
+</body>
+</html>

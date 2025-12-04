@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Laporan Transaksi</title>
+  <link rel="stylesheet" href="style-admin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body onload="renderReports()">
+
+<h1>Laporan Transaksi</h1>
+
+<div class="box">
+
+  <table>
+    <thead>
+      <tr>
+        <th>No</th>
+        <th>Pembeli</th>
+        <th>Produk</th>
+        <th>Ukuran</th>
+        <th>Total</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="reportTable"></tbody>
+  </table>
+
+  <a href="admin-dashboard.html">
+    <button class="ghost">Kembali</button>
+  </a>
+
+</div>
+
+<script src="script-admin.js"></script>
+
+</body>
+</html>
